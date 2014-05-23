@@ -5,60 +5,56 @@ public class MoveBehavior : MonoBehaviour {
 	
 	public float moveSpeed = 5.0f;
 	public float jumpSpeed;
-	public float gravity = 8.0f;
+	public float gravity = 13.0f;
+	public float posX = 0f;
 	public float posY = 0f;
-
+	
 	public Vector3 mouseClickPos;
 	public Vector2 tmpPos;
 	
 	Vector2 moveTowards;
-
-	bool didPhase2Start = false;
 	
-	public GameObject gameController;
-	Controller controller;
-
-	public bool isGrounded;
+	public bool isGrounded = true;
 	private Transform groundCheck;
 	public bool canJump = true;
 	
 	public SpriteRenderer myRenderer;
-	
-	public Sprite[] playerSprites;
 
 	private Animator animator;
 
 	void Awake()
 	{
 		Physics2D.IgnoreLayerCollision(8,9);
+		//Physics2D.IgnoreLayerCollision(8,12);
+		//Physics2D.IgnoreLayerCollision(8,13);
+		//Physics2D.IgnoreLayerCollision(8,14);
 	}
 
 	void Start ()
 	{
 		jumpSpeed = 375f;
 		
-		playerSprites = Resources.LoadAll<Sprite>("TanSkinBaseSheet_strip16");
+		//playerSprites = Resources.LoadAll<Sprite>("TanSkinBaseSheet_strip16");
 		myRenderer = gameObject.GetComponent<SpriteRenderer>();
 
 		animator = this.GetComponent<Animator>();
-		controller = gameController.GetComponent<Controller>();
-		isGrounded = true;
 	}
 	
 	// Update is called once per frame
 	void Update () 
 	{
-		if (controller.phase == 1)
+		if (Controller.instance.phase == 1)
 		{
 			if(mouseClickPos.x == transform.position.x)
 			{
 				animator.SetBool("floating", false);
+				//return; 
 			}
-
+			
 			if (Input.GetMouseButton(0)) {
 				mouseClickPos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
 				mouseClickPos.z = transform.position.z;
-
+				
 				animator.SetBool("floating", true);
 				
 				// Find the difference vector pointing from the weapon to the cursor
@@ -78,29 +74,25 @@ public class MoveBehavior : MonoBehaviour {
 				transform.rotation = Quaternion.Euler(0f,0f,rotZ);
 			}
 			
-			transform.position = Vector3.MoveTowards(transform.position, mouseClickPos, moveSpeed * Time.deltaTime);
+			if (transform.position != mouseClickPos)
+				transform.position = Vector3.MoveTowards(transform.position, mouseClickPos, moveSpeed * Time.deltaTime);
 		}
-		else if (controller.phase == 2)
+		else if (Controller.instance.phase == 2)
 		{
+			//Physics2D.IgnoreLayerCollision(8,11);
 			transform.localRotation = Quaternion.identity;
-
-			transform.position = new Vector2(this.transform.position.x, -4.5f);
-
-			if (didPhase2Start == false)
-			{
-				didPhase2Start = true;
-				animator.SetBool("floating", false);
-
-				animator.SetInteger("phase", 2);
-			}
-
 			if(mouseClickPos.x == transform.position.x)
 			{
 				animator.SetBool("moving", false);
 			}
-
 			if (isGrounded)
 			{
+				if (rigidbody2D.velocity == Vector2.zero)
+				{
+					//animator.SetFloat("Speed", 0.0f);
+				}
+				else
+					//animator.SetFloat("Speed", moveSpeed);
 
 				if (Input.GetMouseButton(0))
 				{
@@ -125,16 +117,12 @@ public class MoveBehavior : MonoBehaviour {
 
 					}
 				}
-				transform.position = Vector2.MoveTowards(new Vector2(transform.position.x, transform.position.y), new Vector2(mouseClickPos.x, 0), (moveSpeed - 1) * Time.deltaTime);
+				transform.position = Vector2.MoveTowards(new Vector2(transform.position.x, -4.127533f), new Vector2(mouseClickPos.x, 0), (moveSpeed - 1) * Time.deltaTime);
 			}
-			else
-			{
-				transform.Translate(new Vector3(0, -gravity * Time.deltaTime, 0));
-			}
-
+			
 			if (Input.GetKeyDown("space") )
 			{
-				isGrounded = false;
+				//isGrounded = false;
 				Jump();
 			}  
 		}
@@ -142,24 +130,32 @@ public class MoveBehavior : MonoBehaviour {
 	
 	void Jump()
 	{
-		rigidbody2D.AddForce(Vector2.up * jumpSpeed);
+		rigidbody2D.AddForce(new Vector2(0, jumpSpeed));
 	}
 	
 	void OnCollisionEnter2D (Collision2D hit)
 	{
 		if (hit.gameObject.tag == "Road")
 		{
-			Debug.Log("Hit the floor");
+			//Debug.Log("Hit the floor");
 			isGrounded = true;
 		}
 	}
 	
 	void OnTriggerEnter2D(Collider2D hit)
 	{
-		if (hit.gameObject.tag == "PosObstacle")
+		if(hit.transform.tag == "PosObstacle")
 		{
-			Debug.Log("Player hit rock.");
-			hit.GetComponent<PositiveObstacles>().hitByPlayer = true;
+			//SoundManager sManager = soundController.GetComponent<SoundManager>();
+			//SoundManager.instance.PlayAudio(sManager.hitSound);
+			GameObject pos_obs = (GameObject)hit.gameObject;
+			PositiveObstacles p_O = pos_obs.GetComponent<PositiveObstacles>();
+			p_O.hitByPlayer = true;
+			if(Controller.instance.phase == 2 && !p_O.hitByPlayerPhase2)
+			{
+				p_O.hitByPlayerPhase2 = true;
+				Controller.instance.current_helpers++;
+			}
 		}
 	}
 }
