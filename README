@@ -1,1 +1,19 @@
-test
+Instructions to import the game:
+
+1. Open Unity
+2. Create a new project (Use whatever name you desire)
+3. Download the package called 'AnimaBetav1.5' from Github
+4. Go to Assets->Import Package->Custom Package...
+5. Choose the package you previously downloaded
+6. Click on 'Import All'
+7. Save the project
+
+Instructions to run the game:
+
+1. Open Unity
+2. Open the project where you imported the Beta version of Anima
+3. Open the scene called 'StartScreen' which is located in the Assets folder
+4. Click on 'Maximize on Play' which you can find in the Game window in the top right corner
+5. Finally, click on the 'Play' button located in the top part of Unity
+
+Any questions or concerns, feel free to email me at carlo.rodriguez08@gmail.com
